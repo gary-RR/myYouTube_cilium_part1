@@ -149,7 +149,6 @@ curl http://$master:$NODEPORT
 
 
 #***************************************************Setup Hubble******************************************************************
-#https://docs.cilium.io/en/stable/gettingstarted/hubble_setup/
 
 cilium hubble enable
 
