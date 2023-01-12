@@ -1,4 +1,7 @@
 #!/bin/bash
+# This script has been updated to work with Ubuntu 22.04 LTS (Jammy)
+# Loding cilium version 1.12.5
+
 export master='192.168.0.23'
 export node1='192.168.0.24'
 
@@ -84,10 +87,10 @@ rm cilium-linux-amd64.tar.gz{,.sha256sum}
 helm repo add cilium https://helm.cilium.io/
 
 #Deploy Cilium release via Helm:
-helm install cilium cilium/cilium --version 1.11.1 \
+helm install cilium cilium/cilium --version 1.12.5 \
     --namespace kube-system \
     --set kubeProxyReplacement=strict \
-    --set k8sServiceHost=@$master \
+    --set k8sServiceHost=$master \
     --set k8sServicePort=6443
 
 #***If "kubectl get nodes" shows "Not Ready"
@@ -97,7 +100,8 @@ kubectl get nodes
 kubectl get pods -n kube-system -o wide
 
 kubectl -n kube-system get pods -l k8s-app=cilium -o wide
-MASTER_CILIUM_POD=$(kubectl -n kube-system get pods -l k8s-app=cilium -o wide |  grep master | awk '{ print $1}' )
+#note: make sure $master is set!
+MASTER_CILIUM_POD=$(kubectl -n kube-system get pods -l k8s-app=cilium -o wide |  grep $master | awk '{ print $1}' )
 echo $MASTER_CILIUM_POD
 
 #validate that the Cilium agent is running in the desired mode (non kube-proxy)
@@ -115,10 +119,10 @@ scp -r $HOME/.kube gary@$node1:/home/gary
 
 #**************************************************Cluster installation tests*******************************************************
 #Optionally untaintthe master node
-kubectl taint node kube-master node-role.kubernetes.io/master-
+kubectl taint node $master node-role.kubernetes.io/master-
 
 #Schedule a Kubernetes deployment using a container from Google samples
-kubectl create deployment hello-world --image=gcr.io/google-samples/hello-app:1.0
+kubectl create deployment hellokubectl taint node $master node-role.kubernetes.io/master--world --image=gcr.io/google-samples/hello-app:1.0
 
 #Scale up the replica set to 4
 kubectl scale --replicas=4 deployment/hello-world
@@ -183,17 +187,7 @@ hubble status
     hubble observe
 
 #Setup Hubble UI
+# I found that in order to enable the hubble ui, you need to first perform `cilium hubble disable` if you have done this and then perform the following:
 cilium hubble enable --ui
 
 cilium hubble ui
-
-
-
-
-
-
-
-
-
-
-
